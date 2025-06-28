@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Mining Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .mining-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ton-spinner {
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            position: relative;
+            animation: spin 3s linear infinite;
+        }
+
+        .ton-icon {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ton-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 5px;
+        }
+
+        .ton-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .mining-stats {
+            margin: 30px 0;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .mining-rate {
+            font-size: 1.2em;
+            margin: 20px 0;
+            color: #90ee90;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mining-animation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            opacity: 0;
+            animation: miningPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes miningPulse {
+            0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00d4ff;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { opacity: 1; transform: translateY(0px); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="mining-container">
+        <h1 class="title">TON MINER</h1>
+        
+        <div class="ton-spinner" id="spinner">
+            <div class="ton-icon">
+                <div class="ton-logo">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiBmaWxsPSIjMDA5N0ZGIi8+CjxwYXRoIGQ9Ik0yNS4zIDM0LjVIODIuN0M4My40IDM0LjUgODQgMzUuMSA4NCAzNS44Qzg0IDM2LjMgODMuOCAzNi44IDgzLjUgMzcuMUw1Ni4zIDgyLjdDNTUuNyA4My43IDU0LjcgODQuMyA1My42IDg0LjNDNTIuNSA4NC4zIDUxLjUgODMuNyA1MC45IDgyLjdMMjMuNyAzNy4xQzIzLjQgMzYuOCAyMy4yIDM2LjMgMjMuMiAzNS44QzIzLjIgMzUuMSAyMy44IDM0LjUgMjQuNSAzNC41SDI1LjNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNNTAuNSA0MS4yVjc1LjZMMzEuNCA0MS4ySDUwLjVaIiBmaWxsPSIjMDA5N0ZGIi8+CjxwYXRoIGQ9Ik01MyA0MS4yVjc1LjZMNzIuMSA0MS4ySDUzWiIgZmlsbD0iIzAwOTdGRiIvPgo8L3N2Zz4K" alt="TON Logo">
+                </div>
+            </div>
+        </div>
+
+        <div class="particles" id="particles"></div>
+
+        <div class="mining-rate" id="miningRate">
+            Mining Rate: <span id="rateValue">0.00</span> TON/sec
+        </div>
+
+        <div class="mining-stats">
+            <div class="stat-item">
+                <div class="stat-label">Total Mined</div>
+                <div class="stat-value" id="totalMined">0.000000</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Mining Time</div>
+                <div class="stat-value" id="miningTime">00:00:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Hash Rate</div>
+                <div class="stat-value" id="hashRate">0 H/s</div>
+            </div>
+        </div>
+
+        <div class="control-buttons">
+            <button class="btn btn-start" id="startBtn" onclick="startMining()">Start Mining</button>
+            <button class="btn btn-stop" id="stopBtn" onclick="stopMining()" disabled>Stop Mining</button>
+        </div>
+    </div>
+
+    <script>
+        let isMining = false;
+        let totalMined = 0;
+        let miningStartTime = 0;
+        let miningInterval;
+        let timeInterval;
+        let particleInterval;
+
+        function startMining() {
+            if (isMining) return;
+            
+            isMining = true;
+            miningStartTime = Date.now();
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            // Start mining animation - removed lightning animation
+            // document.getElementById('miningAnimation').style.animationPlayState = 'running';
+            
+            // Mining logic
+            miningInterval = setInterval(() => {
+                const miningRate = Math.random() * 0.01 + 0.005; // Random rate between 0.005-0.015 TON/sec
+                totalMined += miningRate;
+                
+                document.getElementById('totalMined').textContent = totalMined.toFixed(6);
+                document.getElementById('rateValue').textContent = miningRate.toFixed(3);
+                
+                // Random hash rate
+                const hashRate = Math.floor(Math.random() * 1000) + 500;
+                document.getElementById('hashRate').textContent = hashRate.toLocaleString() + ' H/s';
+            }, 1000);
+
+            // Time counter
+            timeInterval = setInterval(updateMiningTime, 1000);
+            
+            // Particle effects
+            particleInterval = setInterval(createParticle, 500);
+        }
+
+        function stopMining() {
+            if (!isMining) return;
+            
+            isMining = false;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            clearInterval(miningInterval);
+            clearInterval(timeInterval);
+            clearInterval(particleInterval);
+            
+            document.getElementById('rateValue').textContent = '0.000';
+            document.getElementById('hashRate').textContent = '0 H/s';
+        }
+
+        function updateMiningTime() {
+            if (!isMining) return;
+            
+            const elapsed = Math.floor((Date.now() - miningStartTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = elapsed % 60;
+            
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('miningTime').textContent = timeString;
+        }
+
+        function createParticle() {
+            if (!isMining) return;
+            
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            
+            document.getElementById('particles').appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 3000);
+        }
+
+        // Auto-start mining after 2 seconds
+        setTimeout(() => {
+            startMining();
+        }, 2000);
+    </script>
+</body>
+                      </html>
